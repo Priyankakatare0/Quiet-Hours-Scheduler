@@ -7,7 +7,12 @@ export default function Login() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    const { error } = await supabase.auth.signInWithOtp({ email });
+     const { error } = await supabase.auth.signInWithOtp({ 
+      email,
+      options: {
+        emailRedirectTo: 'https://quiet-hours-scheduler-pt64.vercel.app/auth/callback'
+      }
+    });
     if (error) alert(error.message);
     else alert('Check your email for the magic link!');
   };
