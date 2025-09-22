@@ -62,7 +62,7 @@ export default function Login() {
               try {
                 const { error } = await supabase.auth.signInWithOAuth({
                   provider: 'google',
-                  options: { redirectTo: 'http://localhost:3000' }
+                  options: { redirectTo: 'https://quiet-hours-scheduler-pt64.vercel.app/' }
                 });
                 if (error) {
                   console.error('OAuth error:', error);
