@@ -10,7 +10,7 @@ export default function Login() {
     const { error } = await supabase.auth.signInWithOtp({ 
       email,
       options: {
-        emailRedirectTo: 'https://quiet-hours-scheduler-pt64.vercel.app/auth/callback'
+        emailRedirectTo: 'https://quiet-hours-scheduler-pt64.vercel.app/dashboard'
       }
     });
     if (error) alert(error.message);
