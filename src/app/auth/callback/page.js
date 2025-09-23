@@ -1,45 +1,32 @@
-'use client'
-
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { supabase } from '../../../utils/supabaseClient'
+'use client';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { supabase } from '../../../utils/supabaseClient';
 
 export default function AuthCallback() {
-  const router = useRouter()
+  const router = useRouter();
 
   useEffect(() => {
-    const handleAuthCallback = async () => {
-      try {
-        // 1️⃣ Exchange the code/hash in the URL for a session
-        const { data, error } = await supabase.auth.exchangeCodeForSession(window.location.href)
+    // Parse hash from URL
+    const hash = window.location.hash.substring(1);
+    const params = new URLSearchParams(hash);
 
-        if (error) {
-          console.error('Auth callback error:', error)
-          router.push('/login?error=auth_failed')
-          return
-        }
+    // Get access token
+    const access_token = params.get('access_token');
+    const refresh_token = params.get('refresh_token');
 
-        // 2️⃣ Now Supabase has stored the session internally
-        if (data.session) {
-          router.push('/dashboard') // user is authenticated
-        } else {
-          router.push('/login') // no session
-        }
-      } catch (err) {
-        console.error('Unexpected auth error:', err)
-        router.push('/login?error=unexpected')
-      }
+    // Optionally, set Supabase session
+    if (access_token && refresh_token) {
+      supabase.auth.setSession({ access_token, refresh_token });
     }
 
-    handleAuthCallback()
-  }, [router])
+    // Redirect to dashboard
+    router.replace('/dashboard');
+  }, [router]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-[#012e2e] to-gray-900 text-gray-200 flex items-center justify-center">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-400 mx-auto mb-4"></div>
-        <p className="text-gray-400">Authenticating...</p>
-      </div>
+    <div className="flex items-center justify-center h-screen">
+      <p>Redirecting...</p>
     </div>
-  )
+  );
 }
