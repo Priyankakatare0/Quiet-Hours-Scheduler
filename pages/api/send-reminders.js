@@ -72,9 +72,18 @@ export default async function handler(req, res) {
                     const emailResult = await transporter.sendMail({
                         from: process.env.EMAIL_USER,
                         to: user.email,
-                        subject: 'Quiet Hour Reminder',
-                        text: `Your quiet hour "${block.title}" starts at ${block.start_time} IST (in about ${timeDiffMinutes} minutes)`
-                    });
+                       subject: '🌙 Quiet Hour Reminder',
+                       html: `
+                          <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
+                            <h2 style="color: #4a90e2;">🌙 Quiet Hour Reminder</h2>
+                            <p>Hello!</p>
+                            <p>Your scheduled <strong>Quiet Hour</strong> "<strong>${block.title}</strong>" is about to begin at <strong>${block.start_time} IST</strong>, just <strong>${timeDiffMinutes} minutes</strong> from now.</p>
+                            <p>Take a moment to prepare and enjoy your focused time! ✨</p>
+                            <hr style="border: none; border-top: 1px solid #eee;" />
+                            <p style="font-size: 0.9em; color: #777;">– The Quiet Hours Scheduler Team</p>
+                          </div>
+`
+
 
                     console.log(`📨 Email sent successfully. Message ID: ${emailResult.messageId}`);
 
