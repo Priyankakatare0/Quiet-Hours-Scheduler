@@ -83,6 +83,7 @@ export default async function handler(req, res) {
                             <p style="font-size: 0.9em; color: #777;">– The Quiet Hours Scheduler Team</p>
                           </div>
 `
+                    })
 
 
                     console.log(`📨 Email sent successfully. Message ID: ${emailResult.messageId}`);
