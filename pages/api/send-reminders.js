@@ -47,8 +47,11 @@ export default async function handler(req, res) {
                 minute
             );
 
-            // Check if current time is 10 minutes before the block
-            if (blockStart.getTime() >= tenMinLater.getTime() && blockStart.getTime() < tenMinLater.getTime() + 60 * 1000) {
+            // Check if block starts between 8-12 minutes from now (wider window)
+            const timeDiffMinutes = Math.round((blockStart.getTime() - now.getTime()) / (60 * 1000));
+            
+            if (timeDiffMinutes >= 8 && timeDiffMinutes <= 12) {
+                console.log(`🎯 Found matching block: "${block.title}" starting in ${timeDiffMinutes} minutes`);
 
                 // Fetch user email from Supabase Auth
                 const { data: { user }, error } = await supabaseAdmin.auth.admin.getUserById(block.user_id);
@@ -64,7 +67,7 @@ export default async function handler(req, res) {
                         from: process.env.EMAIL_USER,
                         to: user.email,
                         subject: 'Quiet Hour Reminder',
-                        text: `Your quiet hour "${block.title}" starts at ${blockStart.toLocaleTimeString()}`
+                        text: `Your quiet hour "${block.title}" starts at ${blockStart.toLocaleTimeString()} (in about ${timeDiffMinutes} minutes)`
                     });
 
                     // Mark as notified
@@ -74,10 +77,12 @@ export default async function handler(req, res) {
                     );
 
                     sentCount++;
-                    console.log(`Reminder sent to ${user.email} for block "${block.title}"`);
+                    console.log(`✅ Reminder sent to ${user.email} for block "${block.title}"`);
                 } catch (emailError) {
-                    console.error(`Failed to send email to ${user.email}:`, emailError);
+                    console.error(`❌ Failed to send email to ${user.email}:`, emailError);
                 }
+            } else {
+                console.log(`⏭️ Block "${block.title}" starts in ${timeDiffMinutes} minutes (outside 8-12 min window)`);
             }
         }
 
