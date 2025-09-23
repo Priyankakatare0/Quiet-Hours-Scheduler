@@ -37,18 +37,22 @@ export default async function handler(req, res) {
         let sentCount = 0;
 
         for (const block of blocks) {
-            // Convert start_time string to Date object for today
+            // Convert start_time string to Date object for today in IST
             const [hour, minute] = block.start_time.split(':').map(Number);
-            const blockStart = new Date(
-                now.getFullYear(),
-                now.getMonth(),
-                now.getDate(),
-                hour,
-                minute
-            );
+            
+            // Create block time in IST timezone
+            const istDate = new Date();
+            istDate.setUTCHours(hour - 5, minute - 30, 0, 0); // Convert IST to UTC (IST = UTC+5:30)
+            
+            // If the time has passed today, it means it's for tomorrow
+            if (istDate.getTime() < now.getTime()) {
+                istDate.setUTCDate(istDate.getUTCDate() + 1);
+            }
 
             // Check if block starts between 8-12 minutes from now (wider window)
-            const timeDiffMinutes = Math.round((blockStart.getTime() - now.getTime()) / (60 * 1000));
+            const timeDiffMinutes = Math.round((istDate.getTime() - now.getTime()) / (60 * 1000));
+            
+            console.log(`🔍 Block "${block.title}" - Current UTC: ${now.toISOString()}, Block IST time as UTC: ${istDate.toISOString()}, Diff: ${timeDiffMinutes} minutes`);
             
             if (timeDiffMinutes >= 8 && timeDiffMinutes <= 12) {
                 console.log(`🎯 Found matching block: "${block.title}" starting in ${timeDiffMinutes} minutes`);
@@ -57,18 +61,22 @@ export default async function handler(req, res) {
                 const { data: { user }, error } = await supabaseAdmin.auth.admin.getUserById(block.user_id);
 
                 if (error || !user || !user.email) {
-                    console.error(`Could not find email for user ${block.user_id}:`, error);
+                    console.error(`❌ Could not find email for user ${block.user_id}:`, error);
                     continue;
                 }
 
+                console.log(`📧 Attempting to send email to ${user.email} for block "${block.title}"`);
+
                 // Send email
                 try {
-                    await transporter.sendMail({
+                    const emailResult = await transporter.sendMail({
                         from: process.env.EMAIL_USER,
                         to: user.email,
                         subject: 'Quiet Hour Reminder',
-                        text: `Your quiet hour "${block.title}" starts at ${blockStart.toLocaleTimeString()} (in about ${timeDiffMinutes} minutes)`
+                        text: `Your quiet hour "${block.title}" starts at ${block.start_time} IST (in about ${timeDiffMinutes} minutes)`
                     });
+
+                    console.log(`📨 Email sent successfully. Message ID: ${emailResult.messageId}`);
 
                     // Mark as notified
                     await blocksCollection.updateOne(
@@ -79,7 +87,8 @@ export default async function handler(req, res) {
                     sentCount++;
                     console.log(`✅ Reminder sent to ${user.email} for block "${block.title}"`);
                 } catch (emailError) {
-                    console.error(`❌ Failed to send email to ${user.email}:`, emailError);
+                    console.error(`❌ Failed to send email to ${user.email}:`, emailError.message);
+                    console.error(`❌ Email error details:`, emailError);
                 }
             } else {
                 console.log(`⏭️ Block "${block.title}" starts in ${timeDiffMinutes} minutes (outside 8-12 min window)`);
