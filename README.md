@@ -214,8 +214,3 @@ This project is open source and available under the [MIT License](LICENSE).
 - **EasyCron** for reliable cron job scheduling
 - **Tailwind CSS** for beautiful styling
 
----
-
-**Built with ❤️ for productive studying**
-
-*Create your perfect study environment with automated reminders!*
